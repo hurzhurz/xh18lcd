@@ -6,3 +6,5 @@ A example for a custom firmware can be found in the development subfolder.
 ## See also
 * TSDZ2 documentation (including serial protocol and connector pinout)  
 https://github.com/hurzhurz/tsdz2
+* Adapted display library  
+https://github.com/hurzhurz/UTFT-STM8S
