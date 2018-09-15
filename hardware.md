@@ -26,7 +26,7 @@ PD3 | LCD backlight control
 PD5 | UART TX
 PD6 | UART RX
 PD7 | Soft power latch
-PE5 | LCD data DB6
+PE5 | LCD data DB7
 
 ## Power supply / control
 * soft power latch
