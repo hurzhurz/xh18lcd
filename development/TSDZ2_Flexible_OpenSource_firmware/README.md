@@ -1,4 +1,4 @@
-This is a very early version of a XH18-LCD firmware made for the TSDZ2 Flexible OpenSource firmware.
+This is a very early version of a XH18-LCD firmware made for the TSDZ2 Flexible OpenSource firmware (v0.12).
 
 **Use it at your own risk!**
 
