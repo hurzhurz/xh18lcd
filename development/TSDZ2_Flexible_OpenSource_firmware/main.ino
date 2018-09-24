@@ -1,0 +1,152 @@
+void setup()
+{
+  power_setup(); // soft power latch
+
+  serial_setup();
+  eeprom_setup();
+  
+  button_setup();
+
+  
+
+
+  serial_setup();
+  
+  display_setup();
+
+  data_setup();
+
+}
+
+void loop()
+{
+  loop_time_now = millis();
+
+  button_loop();
+  
+  
+  power_loop();
+  // do some nonsense
+  //UTFT_clrScr();
+
+  data_loop();
+
+  if(control_variables.ui8_walk_assist_level && (current_screen!=SCREEN_MAIN || button_states[BUTTON_DOWN].pressState!=PRESSSTATE_SINGLE || !button_states[BUTTON_DOWN].isPressed || button_states[BUTTON_DOWN].pressType!=PRESSTYPE_LONG ) )
+    control_variables.ui8_walk_assist_level=0;
+
+  if(current_screen == SCREEN_MAIN)
+  {
+    struct button_state *btn;
+    
+    btn = &(button_states[BUTTON_UP]);
+    if(!btn->isHandled && btn->pressState == PRESSSTATE_SINGLE && btn->pressType == PRESSTYPE_SHORT)
+    {
+      btn->isHandled=true;
+      control_variables.ui8_assist_level++;
+      if(control_variables.ui8_assist_level > configuration_variables.ui8_number_of_assist_levels)
+        control_variables.ui8_assist_level = configuration_variables.ui8_number_of_assist_levels;
+    }
+    
+    btn = &(button_states[BUTTON_DOWN]);
+    if(!btn->isHandled && btn->pressState == PRESSSTATE_SINGLE && btn->pressType == PRESSTYPE_SHORT)
+    {
+      btn->isHandled=true;
+      control_variables.ui8_assist_level--;
+      if(control_variables.ui8_assist_level > configuration_variables.ui8_number_of_assist_levels) // check underflow
+        control_variables.ui8_assist_level = 0;
+    }
+    if(!btn->isHandled && btn->pressState == PRESSSTATE_SINGLE && btn->pressType == PRESSTYPE_LONG)
+    {
+      btn->isHandled=true;
+      control_variables.ui8_walk_assist_level=1;
+    }
+
+    btn = &(button_states[BUTTON_POWER]);
+    if(!btn->isHandled && btn->pressState == PRESSSTATE_SINGLE && btn->pressType == PRESSTYPE_SHORT)
+    {
+      btn->isHandled=true;
+      control_variables.ui8_lights=(~control_variables.ui8_lights)&1;
+    }
+
+    btn = &(button_states[BUTTON_POWER]);
+    if(!btn->isHandled && btn->pressState == PRESSSTATE_DOUBLE && btn->pressType == PRESSTYPE_SHORT)
+    {
+      static uint8_t lcdbright = LCD_BACKLIGHT_LOW;
+      btn->isHandled=true;
+      lcdbright++;
+      if(lcdbright>LCD_BACKLIGHT_HIGH)
+        lcdbright=LCD_BACKLIGHT_OFF;
+      display_set_backlight(lcdbright);
+    }
+    
+    btn = &(button_states[BUTTON_INFO]);
+    if(!btn->isHandled && btn->pressState == PRESSSTATE_SINGLE && btn->pressType == PRESSTYPE_LONG)
+    {
+      btn->isHandled=true;
+      display_setup_screen();
+    }
+    
+  }
+  else if(current_screen == SCREEN_SETUP)
+  {
+    struct button_state *btn_i=&(button_states[BUTTON_INFO]);
+    struct button_state *btn_p=&(button_states[BUTTON_POWER]);
+    struct button_state *btn_u=&(button_states[BUTTON_UP]);
+    struct button_state *btn_d=&(button_states[BUTTON_DOWN]);
+    if(!btn_i->isHandled && btn_i->pressState == PRESSSTATE_SINGLE && btn_i->pressType == PRESSTYPE_LONG)
+    {
+      btn_i->isHandled=true;
+
+      if(setup_flags.reset_config)
+      {
+        setup_flags.reset_config=0;
+        reset_motor_control();
+      }
+      eeprom_save_configuration();
+      
+      if(setup_flags.reset_trip)
+      {
+        setup_flags.reset_trip=0;
+        odometer_trip_tenthkm=0;
+      }
+      if(setup_flags.reset_odometer)
+      {
+        setup_flags.reset_odometer=0;
+        odometer_km=0;
+        eeprom_save_odometer();
+      }
+      
+      display_main_screen();
+    }
+    else if(!btn_p->isHandled && btn_p->pressState == PRESSSTATE_SINGLE && btn_p->pressType == PRESSTYPE_SHORT)
+    {
+      btn_p->isHandled=true;
+      setup_screen_selection--;
+      if(setup_screen_selection>=SETUP_ITEMS_NUM)//underflow
+        setup_screen_selection=SETUP_ITEMS_NUM-1;
+    }
+    else if(!btn_i->isHandled && btn_i->pressState == PRESSSTATE_SINGLE && btn_i->pressType == PRESSTYPE_SHORT)
+    {
+      btn_i->isHandled=true;
+      setup_screen_selection++;
+      if(setup_screen_selection>=SETUP_ITEMS_NUM)//overflow
+        setup_screen_selection=0;
+    }
+    else if(!btn_u->isHandled && btn_u->pressState == PRESSSTATE_SINGLE && btn_u->pressType == PRESSTYPE_SHORT)
+    {
+      btn_u->isHandled=true;
+      update_setting_incdec(true,setup_screen_selection);
+      display_setup_print_value(setup_screen_selection);
+    }
+    else if(!btn_d->isHandled && btn_d->pressState == PRESSSTATE_SINGLE && btn_d->pressType == PRESSTYPE_SHORT)
+    {
+      btn_d->isHandled=true;
+      update_setting_incdec(false,setup_screen_selection);
+      display_setup_print_value(setup_screen_selection);
+    }
+  }
+
+  display_loop();
+  
+  serial_loop();
+}
