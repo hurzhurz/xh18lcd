@@ -316,23 +316,20 @@ void display_main_screen()
 
 void display_setup_print_name(uint8_t num)
 {
-  struct_setup_item * item;
   uint8_t posy = 3+3+15*SETUP_ITEM_PAGE_POSITION(num);
   if(num>=SETUP_ITEMS_NUM) return;
-  item = &(setup_items[num]);
+  struct_setup_item * item = &(setup_items[num]);
   UTFT_print(item->description, 6, posy);
 }
 
 void display_setup_print_value(uint8_t num)
 {
-  struct_setup_item * item;
-  uint16_t tmpval;
   uint8_t posy = 3+3+15*SETUP_ITEM_PAGE_POSITION(num);
   if(num>=SETUP_ITEMS_NUM) return;
   UTFT_setFont(SmallFont);
   UTFT_setColor(VGA_WHITE);
-  item = &(setup_items[num]);
-  tmpval = (item->is16bit)?( *((uint16_t*)(item->pointer))  ):(  *((uint8_t*)(item->pointer))  );
+  struct_setup_item * item = &(setup_items[num]);
+  uint16_t tmpval = (item->is16bit)?( *((uint16_t*)(item->pointer))  ):(  *((uint8_t*)(item->pointer))  );
   UTFT_printNumI_adv(tmpval, 123, posy, 4, ' ');
 
 }
@@ -411,3 +408,4 @@ void display_loop()
       display_main_screen();
   }
 }
+
